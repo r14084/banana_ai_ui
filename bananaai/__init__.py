@@ -1,0 +1,3 @@
+"""Banana AI Prompt Expander Application Package"""
+
+__version__ = "1.0.0"

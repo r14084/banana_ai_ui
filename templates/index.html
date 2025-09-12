@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banana AI - Prompt Expander</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍌 Banana AI Prompt Expander</h1>
+            <p>อัปโหลดรูปภาพและใช้ AI ช่วยขยายความ prompt สำหรับ Banana AI</p>
+        </header>
+
+        <main>
+            <!-- Upload Section -->
+            <section class="upload-section">
+                <h2>📸 อัปโหลดรูปภาพ Reference (1-2 รูป)</h2>
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <!-- First Image Upload -->
+                    <div class="file-input-wrapper">
+                        <input type="file" id="imageFile1" name="image_file_1" accept="image/*">
+                        <label for="imageFile1" class="file-label">เลือกรูปที่ 1</label>
+                        <span id="fileName1" class="file-name">ยังไม่ได้เลือกไฟล์</span>
+                    </div>
+                    <div id="imagePreview1" class="image-preview"></div>
+                    
+                    <!-- Second Image Upload -->
+                    <div class="file-input-wrapper">
+                        <input type="file" id="imageFile2" name="image_file_2" accept="image/*">
+                        <label for="imageFile2" class="file-label">เลือกรูปที่ 2 (ไม่จำเป็น)</label>
+                        <span id="fileName2" class="file-name">ยังไม่ได้เลือกไฟล์</span>
+                    </div>
+                    <div id="imagePreview2" class="image-preview"></div>
+                </form>
+            </section>
+
+            <!-- Prompt Section -->
+            <section class="prompt-section">
+                <h2>✏️ เขียน Prompt</h2>
+                <form id="promptForm">
+                    <div class="form-group">
+                        <textarea 
+                            id="userPrompt" 
+                            name="prompt" 
+                            placeholder="พิมพ์ prompt ที่คุณต้องการ เช่น 'เพิ่มผู้หญิงผมยาวในรูป' หรือ 'ทำให้เป็นฉากกลางคืน'"
+                            rows="4"
+                            maxlength="2000"
+                            required
+                        ></textarea>
+                        <div class="char-count">
+                            <span id="charCount">0</span> / 2000
+                        </div>
+                    </div>
+
+                    <!-- Aspect Ratio Selection -->
+                    <div class="form-group">
+                        <label class="section-label">📐 เลือกอัตราส่วนภาพ</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="aspect_ratio" value="9:16" checked>
+                                <span class="radio-custom"></span>
+                                <span>9:16 (Portrait)</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="aspect_ratio" value="16:9">
+                                <span class="radio-custom"></span>
+                                <span>16:9 (Landscape)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Options (Collapsible) -->
+                    <div class="advanced-options">
+                        <button type="button" id="advancedToggle" class="btn-toggle">
+                            ⚙️ ตัวเลือกขั้นสูง
+                        </button>
+                        <div id="advancedPanel" class="advanced-panel" style="display: none;">
+                            <div class="form-group">
+                                <label for="negativePrompt">Negative Prompt (สิ่งที่ไม่ต้องการ):</label>
+                                <input type="text" id="negativePrompt" placeholder="เช่น blurry, bad quality, distorted" maxlength="500">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="guidanceScale">Guidance Scale (1-20):</label>
+                                    <input type="range" id="guidanceScale" min="1" max="20" value="7.5" step="0.5">
+                                    <span id="guidanceValue">7.5</span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inferenceSteps">Steps (1-100):</label>
+                                    <input type="range" id="inferenceSteps" min="1" max="100" value="20" step="1">
+                                    <span id="stepsValue">20</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="button-group">
+                        <button type="submit" id="assistBtn" class="btn-secondary btn-half">
+                            <span class="btn-text">🤖 AI Assist</span>
+                            <span class="btn-loading" style="display: none;">
+                                <span class="spinner"></span> กำลังประมวลผล...
+                            </span>
+                        </button>
+                        <button type="button" id="generateBtn" class="btn-primary btn-half">
+                            <span class="btn-text">🎨 Generate Image</span>
+                            <span class="btn-loading" style="display: none;">
+                                <span class="spinner"></span> กำลัง Generate...
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Result Section -->
+            <section id="resultSection" class="result-section" style="display: none;">
+                <h2>✨ Expanded Prompt</h2>
+                <div class="result-container">
+                    <div id="expandedPrompt" class="expanded-prompt"></div>
+                    <div class="result-actions">
+                        <button id="copyBtn" class="btn-secondary">📋 คัดลอก</button>
+                        <button id="clearBtn" class="btn-secondary">🗑️ ล้าง</button>
+                    </div>
+                    <div id="copyNotification" class="notification" style="display: none;">
+                        ✅ คัดลอกแล้ว!
+                    </div>
+                </div>
+            </section>
+
+            <!-- Generated Image Section -->
+            <section id="generatedSection" class="generated-section" style="display: none;">
+                <h2>🎨 Generated Image</h2>
+                <div class="generated-container">
+                    <div class="generated-image">
+                        <img id="generatedImg" src="" alt="Generated Image">
+                    </div>
+                    <div class="generated-info">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Filename:</label>
+                                <span id="generatedFilename">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Size:</label>
+                                <span id="generatedSize">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Seed:</label>
+                                <span id="generatedSeed">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="generated-actions">
+                        <a id="downloadBtn" href="#" download class="btn-secondary">💾 ดาวน์โหลด</a>
+                        <button id="clearGeneratedBtn" class="btn-secondary">🗑️ ล้าง</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Error Display -->
+            <div id="errorDisplay" class="error-message" style="display: none;"></div>
+        </main>
+
+        <footer>
+            <p>© 2024 Banana AI Prompt Expander | Version 1.0.0</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
