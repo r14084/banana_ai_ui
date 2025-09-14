@@ -79,8 +79,8 @@ SECRET_KEY=your_secret_key_here
 MAX_CONTENT_MB=20
 
 # การตั้งค่าโมเดล
-LLM_MODEL=gemini-2.0-flash
-BANANA_MODEL=gemini-2.0-flash
+LLM_MODEL=gemini-2.5-flash
+BANANA_MODEL=gemini-2.5-flash-image-preview
 
 # โฟลเดอร์
 UPLOAD_FOLDER=uploads
