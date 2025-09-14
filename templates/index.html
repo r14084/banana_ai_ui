@@ -17,24 +17,14 @@
         <main>
             <!-- Upload Section -->
             <section class="upload-section">
-                <h2>📸 อัปโหลดรูปภาพ Reference (1-2 รูป)</h2>
-                <form id="uploadForm" enctype="multipart/form-data">
-                    <!-- First Image Upload -->
-                    <div class="file-input-wrapper">
-                        <input type="file" id="imageFile1" name="image_file_1" accept="image/*">
-                        <label for="imageFile1" class="file-label">เลือกรูปที่ 1</label>
-                        <span id="fileName1" class="file-name">ยังไม่ได้เลือกไฟล์</span>
-                    </div>
-                    <div id="imagePreview1" class="image-preview"></div>
-                    
-                    <!-- Second Image Upload -->
-                    <div class="file-input-wrapper">
-                        <input type="file" id="imageFile2" name="image_file_2" accept="image/*">
-                        <label for="imageFile2" class="file-label">เลือกรูปที่ 2 (ไม่จำเป็น)</label>
-                        <span id="fileName2" class="file-name">ยังไม่ได้เลือกไฟล์</span>
-                    </div>
-                    <div id="imagePreview2" class="image-preview"></div>
-                </form>
+                <h2>📸 อัปโหลดรูปภาพ Reference</h2>
+                <div id="uploadContainer">
+                    <!-- Dynamic upload items will be added here -->
+                </div>
+                <button type="button" id="addImageBtn" class="btn-add-image">
+                    <span class="plus-icon">+</span>
+                    <span>เพิ่มรูปภาพ</span>
+                </button>
             </section>
 
             <!-- Prompt Section -->

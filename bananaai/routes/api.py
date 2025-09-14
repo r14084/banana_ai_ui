@@ -27,9 +27,10 @@ def assist():
 
         user_text = data.get('prompt').strip()
         ar = data.get('aspect_ratio', '9:16').strip()
+        reference_images = data.get('reference_images', [])
         
-        # Check cache first
-        cache_key = f"{user_text}:{ar}"
+        # Check cache first (include images in cache key)
+        cache_key = f"{user_text}:{ar}:{','.join(reference_images)}"
         cached_result = cache.get(cache_key)
         if cached_result:
             logger.info("Returning cached prompt expansion")
@@ -37,11 +38,17 @@ def assist():
 
         # 1) rule-based expansion ภายใน
         expanded_local = expand_prompt(user_text, ar)
+        
+        # Add reference image context if provided
+        if reference_images:
+            image_context = f"\n\nReference images provided: {', '.join(reference_images)}"
+            expanded_local = expanded_local + image_context
+            logger.info(f"Processing with reference images: {reference_images}")
 
         # 2) ส่งเข้า Gemini 2.5 Flash เพื่อขยาย/ขัดเกลา
         cfg = current_app.config
         client = LLMClient(api_key=cfg.get('GEMINI_API_KEY'), model=cfg.get('LLM_MODEL'))
-        result = client.expand(SYSTEM_GUIDE, expanded_local)
+        result = client.expand(SYSTEM_GUIDE, expanded_local, reference_images=reference_images)
         
         # Cache the result
         cache.set(cache_key, result, ttl=cfg.get('CACHE_TTL', 3600))

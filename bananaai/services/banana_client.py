@@ -48,11 +48,11 @@ class BananaAIClient:
         Returns:
             Dictionary containing image data and metadata or None if failed
         """
-        # Convert aspect ratio to width/height
+        # Convert aspect ratio to width/height - fixed dimensions
         if aspect_ratio == "16:9":
-            width, height = 1024, 576
-        else:  # Default to 9:16
-            width, height = 576, 1024
+            width, height = 1920, 1080  # Full HD landscape
+        else:  # Default to 9:16 
+            width, height = 1080, 1920  # Full HD portrait
 
         # Build prompt for image generation
         image_prompt = self._build_image_prompt(prompt, negative_prompt, aspect_ratio)

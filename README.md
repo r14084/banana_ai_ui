@@ -1,70 +1,107 @@
 # 🍌 Banana AI Prompt Expander
 
-A Flask web application that helps users upload 1-2 reference images, expand prompts using AI, and generate high-quality images using Google's Gemini 2.5 Flash Image Preview model.
+**แอปพลิเคชั่น AI สำหรับขยายความ Prompt และสร้างภาพด้วย Google Gemini API**
 
-## ✨ Features
+เว็บแอปพลิเคชั่นที่ช่วยขยายความ prompt สั้น ๆ ให้เป็นคำอธิบายที่ละเอียดและครบถ้วน เพื่อใช้สร้างภาพที่มีคุณภาพสูงขึ้น พร้อมกับการสนับสนุนรูปภาพอ้างอิงไม่จำกัดจำนวนและการปรับแต่งการสร้างภาพขั้นสูง
 
-- 📸 **Multi-Reference Images**: Upload 1-2 reference images with thumbnail previews
-- 🖼️ **Smart Image Combination**: AI intelligently combines multiple reference images
-- 🤖 **AI-Powered Expansion**: Uses Gemini 2.5 Flash to intelligently expand prompts
-- 🎨 **Image Generation**: Generate images using Gemini 2.5 Flash Image Preview model
-- 📐 **Aspect Ratio Support**: Choose between 9:16 (Portrait) and 16:9 (Landscape)
-- ⚙️ **Advanced Controls**: Adjustable guidance scale, inference steps, and negative prompts
-- ⚡ **Smart Caching**: Caches frequent prompts for faster responses
-- 💾 **Image Management**: Automatically saves generated images to output folder
-- 🛡️ **Security**: Rate limiting, CSRF protection, and input validation
-- 📊 **Health Monitoring**: Built-in health check endpoints
-- 🎨 **Modern UI**: Responsive design with smooth animations and hover effects
+## ✨ คุณสมบัติหลัก
 
-## 🚀 Quick Start
+### 🎨 AI Prompt Expansion
+- **ขยายความ Style เท่านั้น**: ไม่เพิ่มวัตถุหรือคนใหม่ เน้นขยายสไตล์ภาพ
+- **รองรับภาษาไทย**: UI และคำแนะนำเป็นภาษาไทย
+- **Google Gemini API**: ใช้ Gemini 2.0 Flash สำหรับความแม่นยำสูง
+- **Smart Caching**: แคชผลลัพธ์สำหรับการเข้าถึงที่รวดเร็ว
 
-### Prerequisites
+### 📸 Image Reference System
+- **Upload ไม่จำกัด**: เพิ่มรูปอ้างอิงได้ไม่จำกัดจำนวนด้วยปุ่ม +
+- **Drag & Drop**: ลากวางรูปภาพได้สะดวก
+- **Preview System**: แสดงตัวอย่างภาพทันที
+- **Remove Function**: ลบรูปที่ไม่ต้องการด้วยปุ่ม × สีแดง
 
-- Python 3.8 or higher
-- Google Gemini API key (used for both prompt expansion and image generation)
+### 🎛️ Advanced Controls
+- **Aspect Ratio**: 9:16 (Portrait) หรือ 16:9 (Landscape)
+- **Guidance Scale**: ควบคุมการทำตาม prompt (1-20)
+- **Inference Steps**: ควบคุมคุณภาพและความละเอียด (1-100)
+- **Negative Prompt**: ระบุสิ่งที่ไม่ต้องการในภาพ
 
-### Installation
+### 🌙 Modern UI
+- **Dark Theme**: ธีมมืดที่สบายตา
+- **Thai Font**: ใช้ Noto Sans Thai ดูสวยงาม
+- **Responsive**: รองรับทุกขนาดหน้าจอ
+- **Smooth Animations**: เอฟเฟกต์การเคลื่อนไหวที่นุ่มนวล
 
-1. **Clone the repository**
+### 🛡️ Security & Performance
+- **Rate Limiting**: จำกัดการใช้งาน API
+- **CSRF Protection**: ป้องกันการโจมตี
+- **Input Validation**: ตรวจสอบข้อมูลนำเข้า
+- **Health Monitoring**: ตรวจสอบสถานะระบบ
+
+## 📋 ความต้องการของระบบ
+
+- **Python**: 3.8 หรือสูงกว่า
+- **Google Gemini API Key**: สำหรับใช้งาน AI
+- **ระบบปฏิบัติการ**: Windows, macOS, Linux
+
+## 🚀 วิธีติดตั้ง
+
+### 1. Clone โปรเจค
 ```bash
-git clone <your-repo-url>
-cd banana-ai
+git clone [repository-url]
+cd banana_ai_ui
 ```
 
-2. **Create virtual environment**
+### 2. สร้าง Virtual Environment
 ```bash
-python -m venv venv
+# สร้าง virtual environment
+python -m venv .venv
 
-# Activate virtual environment
-# On Linux/Mac:
-source venv/bin/activate
+# เปิดใช้งาน virtual environment
+# สำหรับ Windows
+.venv\Scripts\activate
 
-# On Windows:
-venv\Scripts\activate
+# สำหรับ macOS/Linux
+source .venv/bin/activate
 ```
 
-3. **Install dependencies**
+### 3. ติดตั้ง Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-4. **Setup environment**
-```bash
-cp .env.example .env
-```
-
-Edit `.env` file and add your API key:
+### 4. ตั้งค่า Environment Variables
+แก้ไขไฟล์ `.env`:
 ```env
-GEMINI_API_KEY=your_actual_gemini_api_key_here
+# Google Gemini API Key (จำเป็น)
+GEMINI_API_KEY=your_api_key_here
+
+# การตั้งค่า Flask
 SECRET_KEY=your_secret_key_here
+MAX_CONTENT_MB=20
+
+# การตั้งค่าโมเดล
+LLM_MODEL=gemini-2.0-flash
+BANANA_MODEL=gemini-2.0-flash
+
+# โฟลเดอร์
+UPLOAD_FOLDER=uploads
+OUTPUT_FOLDER=output
+LOG_FOLDER=logs
+
+# Rate Limiting
+RATE_LIMIT_ASSIST=10
+RATE_LIMIT_UPLOAD=5
+
+# Cache
+CACHE_TTL=3600
+CACHE_MAX_SIZE=100
 ```
 
-5. **Run the application**
+### 5. รันแอปพลิเคชั่น
 ```bash
 python app.py
 ```
 
-The application will start at `http://127.0.0.1:8000`
+เปิดเบราว์เซอร์ไปที่: `http://localhost:8000`
 
 ## 📁 Project Structure
 

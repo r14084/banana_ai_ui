@@ -1,10 +1,11 @@
 from .aspect_ratio import AR_MAP
 
 SYSTEM_GUIDE = (
-    "You are a prompt expander for Banana AI image generation. "
-    "Expand user intent into a precise, visual, and non-ambiguous instruction. "
-    "Keep photography-aware details (lighting, lens, perspective), subject placement, style, and constraints. "
-    "Avoid copyrighted names unless provided. Output plain text."
+    "You are a style expander for image generation. "
+    "DO NOT add new objects or subjects. Keep the user's original subject/object exactly as they wrote it. "
+    "ONLY expand on visual style, mood, lighting, color grading, camera techniques, and artistic qualities. "
+    "Focus on: photography style, lighting quality, color tone, atmosphere, texture, composition style, camera angle. "
+    "Never add people, objects, or scenes that the user didn't mention. Output plain text."
 )
 
 BASE_STYLE = (
@@ -14,30 +15,26 @@ BASE_STYLE = (
 
 def expand_prompt(user_text: str, ar: str = '9:16') -> str:
     """
-    Expand user prompt with aspect ratio considerations
+    Expand user prompt focusing ONLY on style, not adding new objects
     
     Args:
-        user_text: The user's original prompt
+        user_text: The user's original prompt (e.g., "cinematic food photography")
         ar: Aspect ratio (9:16 or 16:9)
     
     Returns:
-        Expanded prompt with visual details and technical specifications
+        Expanded prompt with style and technical details ONLY
     """
     ar_conf = AR_MAP.get(ar, AR_MAP['9:16'])
-    hints = [
-        f"Aspect ratio {ar_conf['aspect_ratio']} ({ar_conf['width']}x{ar_conf['height']})",
-        ar_conf['composition_hint'],
-        "match perspective and shadows with the original photo if provided",
-        "clean background continuity; avoid artifacts or extra limbs",
-        "subtle, natural color grading; avoid oversaturation",
-    ]
-
+    
+    # Build style-focused expansion
     expanded = (
         f"{user_text.strip()}\n"
-        f"\nScene & Subject: clarify age range, pose, and facial expression; wardrobe details with textures.\n"
-        f"Lighting: soft daylight or match source; realistic shadows and reflections.\n"
-        f"Composition: rule of thirds; foreground/background separation. {ar_conf['composition_hint']}.\n"
-        f"Technical: {hints[0]}; maintain detail; photorealistic skin; no watermark.\n"
-        f"Context: {hints[2]}. {hints[3]}. {hints[4]}\n"
+        f"\nStyle Enhancement:\n"
+        f"- Lighting: professional studio lighting, soft shadows, highlight details\n"
+        f"- Color Grading: cinematic color palette, balanced tones, rich contrast\n"
+        f"- Composition: {ar_conf['composition_hint']}, {ar_conf['aspect_ratio']} format\n"
+        f"- Technical Quality: ultra sharp focus, high detail, professional grade\n"
+        f"- Atmosphere: mood and tone matching the style requested\n"
+        f"- Camera: professional photography techniques, depth of field control\n"
     )
     return expanded

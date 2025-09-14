@@ -2,14 +2,9 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     // Elements
-    const uploadForm = document.getElementById('uploadForm');
+    const uploadContainer = document.getElementById('uploadContainer');
+    const addImageBtn = document.getElementById('addImageBtn');
     const promptForm = document.getElementById('promptForm');
-    const imageFile1 = document.getElementById('imageFile1');
-    const imageFile2 = document.getElementById('imageFile2');
-    const fileName1 = document.getElementById('fileName1');
-    const fileName2 = document.getElementById('fileName2');
-    const imagePreview1 = document.getElementById('imagePreview1');
-    const imagePreview2 = document.getElementById('imagePreview2');
     const userPrompt = document.getElementById('userPrompt');
     const charCount = document.getElementById('charCount');
     const assistBtn = document.getElementById('assistBtn');
@@ -39,10 +34,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const downloadBtn = document.getElementById('downloadBtn');
     const clearGeneratedBtn = document.getElementById('clearGeneratedBtn');
 
-    let uploadedFile1Url = null;
-    let uploadedFile1Name = null;
-    let uploadedFile2Url = null;
-    let uploadedFile2Name = null;
+    // Store uploaded files
+    let uploadedFiles = {};
+    let imageCounter = 0;
 
     // CSRF Token
     function getCSRFToken() {
@@ -50,53 +44,123 @@ document.addEventListener('DOMContentLoaded', function() {
         return meta ? meta.getAttribute('content') : '';
     }
 
-    // File upload handling for first image
-    imageFile1.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            fileName1.textContent = file.name;
-            
-            // Preview image with thumbnail
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                imagePreview1.innerHTML = `<img src="${e.target.result}" alt="Preview 1" class="thumbnail">`;
-            };
-            reader.readAsDataURL(file);
+    // Create new upload item
+    function createUploadItem() {
+        imageCounter++;
+        const itemId = `upload-${imageCounter}`;
+        
+        const uploadItem = document.createElement('div');
+        uploadItem.className = 'upload-item';
+        uploadItem.id = itemId;
+        uploadItem.innerHTML = `
+            <button type="button" class="remove-btn" data-id="${itemId}">×</button>
+            <input type="file" id="file-${itemId}" accept="image/*">
+            <label for="file-${itemId}" class="upload-label">
+                <div class="upload-preview">
+                    <div class="upload-placeholder">
+                        <div style="font-size: 32px;">📷</div>
+                        <div>คลิกหรือลากรูปมาวาง</div>
+                    </div>
+                </div>
+            </label>
+        `;
+        
+        // Add event listeners
+        const fileInput = uploadItem.querySelector(`#file-${itemId}`);
+        const removeBtn = uploadItem.querySelector('.remove-btn');
+        
+        // File input change event
+        fileInput.addEventListener('change', function(e) {
+            handleFileSelect(e, itemId);
+        });
+        
+        // Remove button click event
+        removeBtn.addEventListener('click', function() {
+            removeUploadItem(itemId);
+        });
+        
+        // Drag and drop events
+        uploadItem.addEventListener('dragover', handleDragOver);
+        uploadItem.addEventListener('dragleave', handleDragLeave);
+        uploadItem.addEventListener('drop', function(e) {
+            handleDrop(e, itemId);
+        });
+        
+        uploadContainer.appendChild(uploadItem);
+    }
 
-            // Upload file
-            uploadFile(file, 1);
-        } else {
-            fileName1.textContent = 'ยังไม่ได้เลือกไฟล์';
-            imagePreview1.innerHTML = '';
+    // Handle file selection
+    function handleFileSelect(e, itemId) {
+        const file = e.target.files[0];
+        if (file && file.type.startsWith('image/')) {
+            processFile(file, itemId);
         }
-    });
+    }
     
-    // File upload handling for second image
-    imageFile2.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            fileName2.textContent = file.name;
-            
-            // Preview image with thumbnail
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                imagePreview2.innerHTML = `<img src="${e.target.result}" alt="Preview 2" class="thumbnail">`;
-            };
-            reader.readAsDataURL(file);
-
-            // Upload file
-            uploadFile(file, 2);
-        } else {
-            fileName2.textContent = 'ยังไม่ได้เลือกไฟล์';
-            imagePreview2.innerHTML = '';
+    // Process and preview file
+    function processFile(file, itemId) {
+        const uploadItem = document.getElementById(itemId);
+        const preview = uploadItem.querySelector('.upload-preview');
+        
+        // Preview image
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.src = e.target.result;
+            img.alt = 'Preview';
+            img.style.maxWidth = '100%';
+            img.style.maxHeight = '150px';
+            img.style.objectFit = 'contain';
+            preview.innerHTML = '';
+            preview.appendChild(img);
+            uploadItem.classList.add('has-image');
+        };
+        reader.readAsDataURL(file);
+        
+        // Upload file
+        uploadFile(file, itemId);
+    }
+    
+    // Drag and drop handlers
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.classList.add('drag-over');
+    }
+    
+    function handleDragLeave(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.classList.remove('drag-over');
+    }
+    
+    function handleDrop(e, itemId) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const uploadItem = document.getElementById(itemId);
+        uploadItem.classList.remove('drag-over');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0 && files[0].type.startsWith('image/')) {
+            processFile(files[0], itemId);
         }
-    });
+    }
+
+    // Remove upload item
+    function removeUploadItem(itemId) {
+        const uploadItem = document.getElementById(itemId);
+        if (uploadItem) {
+            uploadItem.remove();
+            delete uploadedFiles[itemId];
+        }
+    }
 
     // Upload file to server
-    async function uploadFile(file, imageNumber) {
+    async function uploadFile(file, itemId) {
         const formData = new FormData();
         formData.append('image_file', file);
-        formData.append('image_number', imageNumber);
+        formData.append('image_id', itemId);
 
         try {
             const response = await fetch('/api/upload', {
@@ -110,21 +174,28 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
 
             if (response.ok) {
-                if (imageNumber === 1) {
-                    uploadedFile1Url = data.url;
-                    uploadedFile1Name = data.filename;
-                } else {
-                    uploadedFile2Url = data.url;
-                    uploadedFile2Name = data.filename;
-                }
-                showMessage(`ไฟล์รูปที่ ${imageNumber} อัปโหลดสำเร็จ`, 'success');
+                uploadedFiles[itemId] = {
+                    url: data.url,
+                    filename: data.filename
+                };
+                showMessage(`รูปภาพอัปโหลดสำเร็จ`, 'success');
             } else {
                 showError(data.error || 'เกิดข้อผิดพลาดในการอัปโหลด');
+                removeUploadItem(itemId);
             }
         } catch (error) {
             showError('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์');
+            removeUploadItem(itemId);
         }
     }
+
+    // Add image button click
+    addImageBtn.addEventListener('click', function() {
+        createUploadItem();
+    });
+
+    // Initialize with one upload slot
+    createUploadItem();
 
     // Advanced options toggle
     advancedToggle.addEventListener('click', function() {
@@ -158,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Form submission
+    // Form submission for AI Assist
     promptForm.addEventListener('submit', async function(e) {
         e.preventDefault();
 
@@ -172,20 +243,34 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Show loading state
         assistBtn.disabled = true;
-        document.querySelector('.btn-text').style.display = 'none';
-        document.querySelector('.btn-loading').style.display = 'inline-block';
+        assistBtn.querySelector('.btn-text').style.display = 'none';
+        assistBtn.querySelector('.btn-loading').style.display = 'inline-block';
 
         try {
+            // Prepare request data with image references
+            const requestData = {
+                prompt: prompt,
+                aspect_ratio: aspectRatio
+            };
+
+            // Add uploaded image references if available
+            const imageReferences = [];
+            for (const [id, fileData] of Object.entries(uploadedFiles)) {
+                if (fileData.filename) {
+                    imageReferences.push(fileData.filename);
+                }
+            }
+            if (imageReferences.length > 0) {
+                requestData.reference_images = imageReferences;
+            }
+
             const response = await fetch('/api/assist', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCSRFToken()
                 },
-                body: JSON.stringify({
-                    prompt: prompt,
-                    aspect_ratio: aspectRatio
-                })
+                body: JSON.stringify(requestData)
             });
 
             const data = await response.json();
@@ -206,8 +291,8 @@ document.addEventListener('DOMContentLoaded', function() {
         } finally {
             // Reset loading state
             assistBtn.disabled = false;
-            document.querySelector('.btn-text').style.display = 'inline-block';
-            document.querySelector('.btn-loading').style.display = 'none';
+            assistBtn.querySelector('.btn-text').style.display = 'inline-block';
+            assistBtn.querySelector('.btn-loading').style.display = 'none';
         }
     });
 
@@ -270,15 +355,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Add reference images if uploaded
             const referenceImages = [];
-            if (uploadedFile1Name) {
-                referenceImages.push(uploadedFile1Name);
-            }
-            if (uploadedFile2Name) {
-                referenceImages.push(uploadedFile2Name);
+            for (const [id, fileData] of Object.entries(uploadedFiles)) {
+                if (fileData.filename) {
+                    referenceImages.push(fileData.filename);
+                }
             }
             if (referenceImages.length > 0) {
                 requestData.reference_images = referenceImages;
             }
+
+            console.log('Sending generate request with aspect ratio:', aspectRatio);
 
             const response = await fetch('/api/generate', {
                 method: 'POST',
@@ -339,35 +425,6 @@ document.addEventListener('DOMContentLoaded', function() {
         userPrompt.value = '';
         charCount.textContent = '0';
     });
-
-    // Clear all (including uploaded image)
-    function clearAll() {
-        // Clear form
-        userPrompt.value = '';
-        charCount.textContent = '0';
-        negativePrompt.value = '';
-        guidanceScale.value = 7.5;
-        guidanceValue.textContent = '7.5';
-        inferenceSteps.value = 20;
-        stepsValue.textContent = '20';
-        
-        // Clear uploaded images
-        uploadedFile1Url = null;
-        uploadedFile1Name = null;
-        uploadedFile2Url = null;
-        uploadedFile2Name = null;
-        imagePreview1.innerHTML = '';
-        imagePreview2.innerHTML = '';
-        fileName1.textContent = 'ยังไม่ได้เลือกไฟล์';
-        fileName2.textContent = 'ยังไม่ได้เลือกไฟล์';
-        imageFile1.value = '';
-        imageFile2.value = '';
-        
-        // Clear results
-        resultSection.style.display = 'none';
-        expandedPrompt.textContent = '';
-        generatedSection.style.display = 'none';
-    }
 
     // Show error message
     function showError(message) {
