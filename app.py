@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from bananaai.config import load_config, validate_config
 from bananaai.routes.ui import ui_bp
@@ -34,4 +35,5 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(host='127.0.0.1', port=8000, debug=True)
+    port = int(os.environ.get('PORT', 8000))
+    app.run(host='0.0.0.0', port=port)
