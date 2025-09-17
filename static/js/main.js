@@ -101,22 +101,37 @@ document.addEventListener('DOMContentLoaded', function() {
     function processFile(file, itemId) {
         const uploadItem = document.getElementById(itemId);
         const preview = uploadItem.querySelector('.upload-preview');
-        
-        // Preview image
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = new Image();
-            img.src = e.target.result;
-            img.alt = 'Preview';
-            img.style.maxWidth = '100%';
-            img.style.maxHeight = '150px';
-            img.style.objectFit = 'contain';
-            preview.innerHTML = '';
-            preview.appendChild(img);
-            uploadItem.classList.add('has-image');
+
+        // Clean up previous preview URL if it exists
+        if (uploadItem.dataset.previewUrl) {
+            URL.revokeObjectURL(uploadItem.dataset.previewUrl);
+            delete uploadItem.dataset.previewUrl;
+        }
+
+        // Create an object URL so the user sees an instant preview
+        const objectUrl = URL.createObjectURL(file);
+        uploadItem.dataset.previewUrl = objectUrl;
+
+        const img = document.createElement('img');
+        img.src = objectUrl;
+        img.alt = 'Preview';
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '150px';
+        img.style.objectFit = 'contain';
+        img.onload = function() {
+            URL.revokeObjectURL(objectUrl);
+            delete uploadItem.dataset.previewUrl;
         };
-        reader.readAsDataURL(file);
-        
+        img.onerror = function() {
+            URL.revokeObjectURL(objectUrl);
+            delete uploadItem.dataset.previewUrl;
+            preview.innerHTML = '<div class="upload-placeholder">ไม่สามารถแสดงตัวอย่างรูปนี้ได้</div>';
+        };
+
+        preview.innerHTML = '';
+        preview.appendChild(img);
+        uploadItem.classList.add('has-image');
+
         // Upload file
         uploadFile(file, itemId);
     }
@@ -151,6 +166,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function removeUploadItem(itemId) {
         const uploadItem = document.getElementById(itemId);
         if (uploadItem) {
+            if (uploadItem.dataset.previewUrl) {
+                URL.revokeObjectURL(uploadItem.dataset.previewUrl);
+                delete uploadItem.dataset.previewUrl;
+            }
             uploadItem.remove();
             delete uploadedFiles[itemId];
         }
