@@ -19,7 +19,12 @@ def register_security_middleware(app):
         response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
         
         # Content Security Policy (adjust as needed)
-        csp = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
+        csp = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data: blob:;"
+        )
         response.headers['Content-Security-Policy'] = csp
         
         return response
